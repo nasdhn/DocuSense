@@ -22,6 +22,6 @@ def generate(question, chunks):
 
 
 if __name__ == "__main__":
-    question = "Dans quelle domaine le cv fourni peut il estre utilisé ? "
+    question = "Dans quel domaine le cv fourni peut il etre utilisé ? "
     chunks = retrieve(question, 3)
     generate(question, chunks['documents'][0])
