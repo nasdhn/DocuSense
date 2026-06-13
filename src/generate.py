@@ -12,7 +12,7 @@ def generate(question, chunks, history=[]):
     response = client.chat.completions.create(
     model="llama-3.1-8b-instant",
     messages=[
-        {"role": "system", "content": "Tu es un assistant. Réponds uniquement en te basant sur les extraits fournis."},
+        {"role": "system", "content": "Tu es un assistant. Réponds uniquement en te basant sur les extraits fournis. Utilise des <p> pour les paragraphes, des <ul> et <li> pour les listes, des <strong> pour les mots importants, Ne jamais utiliser de Markdown (*, +, #)"},
         *history,
         {"role": "user", "content": question_and_chunks}
         ]
