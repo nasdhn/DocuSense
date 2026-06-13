@@ -1,5 +1,6 @@
 import fitz
 from sentence_transformers import SentenceTransformer
+import chromadb
 
 def parse_pdf(path):
     result = []
@@ -31,6 +32,13 @@ def embed_chunks(chunks):
     model = SentenceTransformer("all-MiniLM-L6-v2")
     return model.encode(chunks)
 
+def store_embeddings(chunks, embeddings):
+    ids = [f"chunk_{i}" for i in range(len(chunks))]
+
+    client = chromadb.PersistentClient(path="db/")
+    collection = client.get_or_create_collection("documents")
+    collection.add(ids=ids, embeddings=embeddings, documents=chunks)
+
 
 if __name__ == "__main__":
    pages =  parse_pdf("data/CV_Nasim_DAHMAN_T2i.pdf")
@@ -41,4 +49,7 @@ if __name__ == "__main__":
    print(chunks[1])
 
    embeddings = embed_chunks(chunks)
-   print(embeddings)
+   print(embeddings.shape)
+   print("-----------")
+
+   store_embeddings(chunks, embeddings)
