@@ -1,4 +1,5 @@
 import fitz
+from sentence_transformers import SentenceTransformer
 
 def parse_pdf(path):
     result = []
@@ -26,7 +27,9 @@ def chunk_text(pages, chunk_size=500, overlap=50):
     return result
 
 
-        
+def embed_chunks(chunks):
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+    return model.encode(chunks)
 
 
 if __name__ == "__main__":
@@ -36,3 +39,6 @@ if __name__ == "__main__":
    print(len(chunks))
    print("-----------")
    print(chunks[1])
+
+   embeddings = embed_chunks(chunks)
+   print(embeddings)
