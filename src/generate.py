@@ -5,7 +5,7 @@ from src.retrieval import retrieve
 
 load_dotenv()
 
-def generate(question, chunks):
+def generate(question, chunks, history=[]):
     question_and_chunks = question + "\n\nContext:\n" + "\n".join(chunks)
     
     client = Groq(api_key=os.getenv("GROQ_API_KEY"))
@@ -13,6 +13,7 @@ def generate(question, chunks):
     model="llama-3.1-8b-instant",
     messages=[
         {"role": "system", "content": "Tu es un assistant. Réponds uniquement en te basant sur les extraits fournis."},
+        *history,
         {"role": "user", "content": question_and_chunks}
         ]
     )
