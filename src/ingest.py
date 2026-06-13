@@ -1,6 +1,7 @@
 import fitz
 from sentence_transformers import SentenceTransformer
 import chromadb
+from pathlib import Path
 
 def parse_pdf(path):
     result = []
@@ -27,29 +28,23 @@ def chunk_text(pages, chunk_size=500, overlap=50):
 
     return result
 
-
-def embed_chunks(chunks):
-    model = SentenceTransformer("all-MiniLM-L6-v2")
-    return model.encode(chunks)
-
-def store_embeddings(chunks, embeddings):
-    ids = [f"chunk_{i}" for i in range(len(chunks))]
+def store_embeddings(chunks, embeddings, filename):
+    ids = [f"{filename}_{i}" for i in range(len(chunks))]
 
     client = chromadb.PersistentClient(path="db/")
     collection = client.get_or_create_collection("documents")
     collection.add(ids=ids, embeddings=embeddings, documents=chunks)
 
 
+def ingest_folder(folder_path):
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+    files = Path(folder_path).glob("*.pdf")
+    for file in files:
+        page = parse_pdf(file)
+        chunk =chunk_text(page)
+        embedding = model.encode(chunk)
+        store_embeddings(chunk, embedding, file)
+
+
 if __name__ == "__main__":
-   pages =  parse_pdf("data/CV_Nasim_DAHMAN_T2i.pdf")
-   chunks = chunk_text(pages)
-   print("-----------")
-   print(len(chunks))
-   print("-----------")
-   print(chunks[1])
-
-   embeddings = embed_chunks(chunks)
-   print(embeddings.shape)
-   print("-----------")
-
-   store_embeddings(chunks, embeddings)
+    ingest_folder("data/")
