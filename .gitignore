@@ -4,3 +4,4 @@ __pycache__/
 docs.txt
 data/
 .vscode
+db/
