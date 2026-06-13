@@ -2,3 +2,5 @@ pymupdf
 sentence-transformers
 chromadb
 groq
+fastapi
+uvicorn

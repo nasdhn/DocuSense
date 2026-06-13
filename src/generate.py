@@ -1,7 +1,7 @@
 from groq import Groq
 import os
 from dotenv import load_dotenv
-from retrieval import retrieve
+from src.retrieval import retrieve
 
 load_dotenv()
 
