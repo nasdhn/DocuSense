@@ -24,10 +24,14 @@ pip install -r requirements.txt
 ```
 
 ### Ingest your documents
+```bash
 python3 ingest.py
+```
 
 ### Run the server
+```bash
 uvicorn src.api:app --reload
+```
 
 ## 🔮 Future Improvements
 - Advanced PDF parsing & OCR support
