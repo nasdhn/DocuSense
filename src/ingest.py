@@ -40,10 +40,13 @@ def ingest_folder(folder_path):
     model = SentenceTransformer("all-MiniLM-L6-v2")
     files = Path(folder_path).glob("*.pdf")
     for file in files:
-        page = parse_pdf(file)
-        chunk =chunk_text(page)
-        embedding = model.encode(chunk)
-        store_embeddings(chunk, embedding, file)
+        ingest_file(file, model)
+
+def ingest_file(file_path, model):
+    page = parse_pdf(file_path)
+    chunk = chunk_text(page)
+    embedding = model.encode(chunk)
+    store_embeddings(chunk, embedding, file_path)
 
 
 if __name__ == "__main__":

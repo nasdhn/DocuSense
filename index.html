@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DocuSense</title>
     
-    <!-- Importation de la police Inter -->
-    <link href="[https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap)" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     
     <style>
         :root {
@@ -72,6 +71,26 @@
             color: var(--text-muted);
             font-size: 0.95rem;
             font-weight: 300;
+        }
+
+        .upload-btn {
+            margin-top: 16px;
+            padding: 10px 24px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .upload-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.3);
         }
 
         #chat {
@@ -199,7 +218,7 @@
             stroke-width: 2;
             stroke-linecap: round;
             stroke-linejoin: round;
-            margin-left: -2px; /* Centrage visuel de l'avion */
+            margin-left: -2px;
         }
 
         @media (max-width: 600px) {
@@ -221,13 +240,15 @@
         <div class="header">
             <h1>📚 DocuSense</h1>
             <p>Intelligence documentaire propulsée par l'IA</p>
+            
+            <input type="file" id="fileInput" accept=".pdf" style="display: none;">
+            <button id="uploadBtn" class="upload-btn">📄 Ajouter un document</button>
         </div>
 
         <div id="chat">
             <div class="message assistant">
                 Bonjour ! Posez-moi n'importe quelle question sur vos documents.
             </div>
-            
         </div>
 
         <div class="input-area">
@@ -240,7 +261,6 @@
                 >
             </div>
             <button id="send" aria-label="Envoyer">
-                <!-- Icône SVG d'avion en papier pour un look plus moderne -->
                 <svg viewBox="0 0 24 24">
                     <line x1="22" y1="2" x2="11" y2="13"></line>
                     <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
@@ -250,71 +270,105 @@
     </div>
 
     <script>
-    // 1. On récupère les éléments importants de la page
-    const chatContainer = document.getElementById('chat');
-    const questionInput = document.getElementById('question');
-    const sendButton = document.getElementById('send');
+        // --- 1. SÉLECTION DES ÉLÉMENTS DOM ---
+        const chatContainer = document.getElementById('chat');
+        const questionInput = document.getElementById('question');
+        const sendButton = document.getElementById('send');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
 
-    // Fonction pratique pour créer et afficher un message à l'écran
-    function addMessage(text, role) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${role}`; // 'role' sera 'user' ou 'assistant'
-
-        if (role === 'assistant') {
-             messageDiv.innerHTML = text; 
+        // --- 2. FONCTION POUR AJOUTER UN MESSAGE AU CHAT ---
+        function addMessage(text, role) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            if (role === 'assistant') {
+                messageDiv.innerHTML = text
+            } else {
+                messageDiv.textContent = text
+            } // Sécurisé contre les failles XSS
+            
+            chatContainer.appendChild(messageDiv);
+            
+            // Défilement automatique vers le bas à chaque nouveau message
+            chatContainer.scrollTop = chatContainer.scrollHeight;
         }
-        else {
-            messageDiv.textContent = text;     
-        }       // On insère le texte en toute sécurité
-        
-        chatContainer.appendChild(messageDiv);    // On l'ajoute dans le chat
-        chatContainer.scrollTop = chatContainer.scrollHeight; // On fait défiler tout en bas
-    }
 
-    // 2. Que se passe-t-il quand on clique sur "Envoyer" ?
-    sendButton.addEventListener('click', async () => {
-        const text = questionInput.value.trim();
+        // --- 3. LOGIQUE D'ENVOI DE QUESTIONS (/ask) ---
+        sendButton.addEventListener('click', async () => {
+            const text = questionInput.value.trim();
 
-        // Si le champ est vide, on arrête tout
-        if (text === '') return;
+            // Bloquer l'envoi si le champ est vide
+            if (text === '') return;
 
-        // 3. On affiche le message de l'utilisateur
-        addMessage(text, 'user');
+            // Affichage de la question de l'utilisateur et nettoyage de l'input
+            addMessage(text, 'user');
+            questionInput.value = '';
 
-        // 4. On vide le champ de texte
-        questionInput.value = '';
+            try {
+                // Envoi de la requête au serveur au format JSON
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ question: text })
+                });
 
-        try {
-            // 5. On envoie la requête (fetch) au serveur sur la route /ask
-            const response = await fetch('/ask', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ question: text })
-            });
+                const data = await response.json();
 
-            // On attend la réponse du serveur et on la lit
-            const data = await response.json();
+                // Affichage de la réponse du serveur (ajuste 'data.answer' selon ton backend)
+                addMessage(data.answer || "Réponse reçue du serveur.", 'assistant');
 
-            // 6. On affiche la réponse de l'assistant
-            // (Assure-toi que ton serveur renvoie bien un objet avec une clé 'answer' ou adapte ce mot)
-            addMessage(data.answer, 'assistant');
+            } catch (error) {
+                addMessage("❌ Oups, impossible de joindre le serveur pour répondre à ta question.", 'assistant');
+            }
+        });
 
-        } catch (error) {
-            // En cas de problème de connexion avec le serveur
-            addMessage("Oups, impossible de joindre le serveur.", 'assistant');
-        }
-    });
+        // Envoi avec la touche Entrée
+        questionInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                sendButton.click();
+            }
+        });
 
-    // Bonus : Permettre d'envoyer en appuyant sur la touche "Entrée" du clavier
-    questionInput.addEventListener('keypress', (event) => {
-        if (event.key === 'Enter') {
-            sendButton.click();
-        }
-    });
-</script>
+        // --- 4. LOGIQUE D'IMPORTATION DE DOCUMENTS (/ingest) ---
+        // Déclenchement de la boîte de dialogue de sélection au clic sur le bouton visible
+        uploadBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
 
+        // Détection de la sélection du fichier
+        fileInput.addEventListener('change', async () => {
+            const file = fileInput.files[0];
+            
+            if (!file) return;
+
+            // Notification visuelle immédiate dans le chat
+            addMessage(`⏳ Envoi et analyse de "${file.name}" en cours...`, 'assistant');
+
+            // Construction du FormData
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                // Envoi de la requête au serveur (le navigateur gère seul le Content-Type multi-part)
+                const response = await fetch('/ingest', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    addMessage("✅ Document ajouté et analysé avec succès ! Tu peux maintenant me poser tes questions.", 'assistant');
+                } else {
+                    addMessage("❌ Une erreur est survenue sur le serveur lors de l'analyse du document.", 'assistant');
+                }
+            } catch (error) {
+                addMessage("❌ Impossible de joindre le serveur. Vérifie ta connexion.", 'assistant');
+            }
+            
+            // Remise à zéro de l'input pour pouvoir ré-importer le même fichier si besoin
+            fileInput.value = '';
+        });
+    </script>
 </body>
 </html>
-
